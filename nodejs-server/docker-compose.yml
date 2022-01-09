@@ -1,0 +1,11 @@
+version: '3.9'
+services:
+  nodejs_server:
+    env_file:
+      - .env
+    build: .
+    container_name: nodejs_server
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    volumes:
+      - ./:/usr/src/app

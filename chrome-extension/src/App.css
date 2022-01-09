@@ -1,0 +1,56 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    width: 400px;
+    height: 200px;
+}
+
+.status-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    height: 100%;
+    box-sizing: border-box;
+    /*border: 1px solid red;*/
+}
+
+.recognize-button {
+    background: #002b01 url("/images/logo.png") no-repeat center;
+    background-size: 120px 120px;
+    border: none;
+    height: 150px;
+    width: 150px;
+    border-radius: 50%;
+    outline: none;
+    margin: 0 auto;
+    cursor: pointer;
+}
+
+.recognize-button:hover {
+    background-color: #003d02;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+
+    50%{
+        transform: rotate(180deg) scale(1.1);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+    }
+}
+
+.rotating {
+    animation: rotate 2s linear infinite;
+}

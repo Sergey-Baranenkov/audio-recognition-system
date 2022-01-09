@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "ЗамШа",
+  "description": "Плагин распознавания треков из аудио на странице",
+  "version": "1.0.0",
+
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": ["tabCapture", "tabs"]
+}
