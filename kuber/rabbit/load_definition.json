@@ -1,0 +1,78 @@
+{
+  "users": [{
+    "name": "administrator",
+    "password": "administrator",
+    "tags": "administrator"
+  }, {
+    "name": "developer",
+    "password": "developer",
+    "tags": "developer"
+  }],
+  "vhosts": [{
+    "name": "/"
+  }],
+  "permissions": [{
+    "user": "administrator",
+    "vhost": "/",
+    "configure": ".*",
+    "write": ".*",
+    "read": ".*"
+  }, {
+    "user": "developer",
+    "vhost": "/",
+    "configure": "",
+    "write": ".*",
+    "read": ".*"
+  }],
+  "exchanges": [{
+    "name": "music-exchange",
+    "vhost": "/",
+    "type": "direct",
+    "durable": true,
+    "auto_delete": false,
+    "internal": false,
+    "arguments": {}
+  }],
+  "queues": [{
+    "name": "music-recognition-queue",
+    "vhost": "/",
+    "durable": false,
+    "auto_delete": false,
+    "arguments": {
+      "x-message-ttl": 90000
+    }
+  },{
+    "name": "music-new-song-queue",
+    "vhost": "/",
+    "durable": true,
+    "auto_delete": false,
+    "arguments": {}
+  }],
+  "bindings": [{
+    "source": "music-exchange",
+    "vhost": "/",
+    "destination": "music-recognition-queue",
+    "destination_type": "queue",
+    "routing_key": "recognition",
+    "arguments": {}
+  },{
+    "source": "music-exchange",
+    "vhost": "/",
+    "destination": "music-new-song-queue",
+    "destination_type": "queue",
+    "routing_key": "new-song",
+    "arguments": {}
+  }],
+  "policies":[
+    {
+      "vhost":"/",
+      "name":"ha-policy",
+      "pattern":"",
+      "definition": {
+        "ha-mode":"all",
+        "ha-sync-mode":"automatic",
+        "ha-sync-batch-size":5
+      }
+    }
+  ]
+}

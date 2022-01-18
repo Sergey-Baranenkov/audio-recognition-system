@@ -1,0 +1,21 @@
+rootUser: "developer"
+rootPassword: "developer"
+replicas: 4 # erasure кратно 4
+
+persistence:
+  size: 1Gi
+
+resources:
+  requests:
+    memory: 256Mi
+
+buckets:
+ - name: music
+   policy: download
+   purge: false
+   versioning: false
+
+ - name: temporary
+   policy: none
+   purge: false
+   versioning: false

@@ -1,0 +1,1 @@
+kubectl port-forward diploma-redis-redis-cluster-0 6379:6379

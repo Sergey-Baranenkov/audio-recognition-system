@@ -1,0 +1,11 @@
+persistence:
+    size: 1Gi
+
+externalAccess:
+#    @param cluster.externalAccess.enabled Enable access to the Redis
+
+    enabled: true
+
+password: developer
+#service:
+#    type: LoadBalancer
