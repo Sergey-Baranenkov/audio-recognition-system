@@ -9,3 +9,4 @@ services:
       - ${SERVER_PORT}:${SERVER_PORT}
     volumes:
       - ./:/usr/src/app
+    network_mode: host

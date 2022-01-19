@@ -3,14 +3,23 @@ import Inert from '@hapi/inert';
 
 import * as Hapi from '@hapi/hapi';
 import * as Boom from '@hapi/boom';
+import * as AWS from 'aws-sdk'
+
 
 import setupLogger from './setup/setupLogger';
 import routes from './routes';
 import validateEnvironmentVariables, {AppEnvironmentVariablesType} from "./setup/validateEnvironmentVariables";
 import * as Path from "path";
+import setupMinioClient from "./setup/setupMinioClient";
+import amqp from "amqplib";
+import setupRabbit, {IRabbit} from "./setup/setupRabbit";
 
 class App {
   private logger: Pino.Logger;
+
+  private _minio: AWS.S3;
+
+  private _rabbit: IRabbit;
 
   private server: Hapi.Server;
 
@@ -27,6 +36,8 @@ class App {
 
     try {
       this.logger = setupLogger(this.config);
+      this._minio = setupMinioClient(this.config);
+      await this.connectRabbit();
 
       await this.initServer();
       await this.server.start();
@@ -47,12 +58,38 @@ class App {
     return this.server.stop();
   }
 
+  private async connectRabbit() {
+    try {
+      this._rabbit = await setupRabbit(this.config);
+      this._rabbit.connection.on(
+          'error',
+          async () => {
+            this.log.error('Connection with rabbit lost!');
+            setTimeout(this.connectRabbit.bind(this), 3000)
+          }
+      );
+      this.log.info('Connection with rabbit established!');
+    } catch (e) {
+      this.log.warn('Trying to reconnect to rabbit...');
+      setTimeout(this.connectRabbit.bind(this), 3000);
+    }
+  }
+
+
   public get config(): AppEnvironmentVariablesType {
     return this._config;
   }
 
   public get log(): Pino.Logger {
     return this.logger;
+  }
+
+  public get minio(): AWS.S3 {
+    return this._minio;
+  }
+
+  public get rabbit(): IRabbit {
+    return this._rabbit;
   }
 
   private async initServer() {
