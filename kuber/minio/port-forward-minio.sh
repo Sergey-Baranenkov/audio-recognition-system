@@ -1,0 +1,1 @@
+kubectl port-forward services/diploma-minio 9000:9000
