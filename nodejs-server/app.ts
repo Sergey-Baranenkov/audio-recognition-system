@@ -13,6 +13,8 @@ import * as Path from "path";
 import setupMinioClient from "./setup/setupMinioClient";
 import amqp from "amqplib";
 import setupRabbit, {IRabbit} from "./setup/setupRabbit";
+import RedisCluster from "@node-redis/client/dist/lib/cluster";
+import setupRedis from "./setup/setupRedis";
 
 class App {
   private logger: Pino.Logger;
@@ -20,6 +22,8 @@ class App {
   private _minio: AWS.S3;
 
   private _rabbit: IRabbit;
+
+  private _redis: RedisCluster<any, any>;
 
   private server: Hapi.Server;
 
@@ -35,9 +39,21 @@ class App {
     this._config = environmentVariables;
 
     try {
+      console.log('Пытаюсь инициализировать логгер...');
       this.logger = setupLogger(this.config);
+      this.log.info('Логгер инициализирован успешно');
+
+      this.log.info('Пытаюсь инициализировать minio...');
       this._minio = setupMinioClient(this.config);
+      this.log.info('Minio инициализирован успешно');
+
+      this.log.info('Пытаюсь инициализировать rabbit...');
       await this.connectRabbit();
+      this.log.info('Rabbit инициализирован успешно');
+
+      // this.log.info('Пытаюсь инициализировать redis...');
+      // this._redis = await setupRedis(this.config);
+      // this.log.info('Redis инициализирован успешно');
 
       await this.initServer();
       await this.server.start();
@@ -90,6 +106,10 @@ class App {
 
   public get rabbit(): IRabbit {
     return this._rabbit;
+  }
+
+  public get redis() {
+    return this._redis;
   }
 
   private async initServer() {
