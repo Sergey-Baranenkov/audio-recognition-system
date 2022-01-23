@@ -13,5 +13,5 @@ def handle_request(ch: Channel, method: Basic.Deliver, properties: BasicProperti
     sound = parse_file(filename)
     downsampled_sound, downsampled_frame_rate = downsample_sound(sound)
     result = perform_algorithm(downsampled_sound, downsampled_frame_rate)
-    handle_response(ch, result)
+    handle_response(ch, result, properties.headers)
     ch.basic_ack(delivery_tag=method.delivery_tag)

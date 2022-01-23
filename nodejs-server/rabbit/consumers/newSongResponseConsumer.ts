@@ -5,7 +5,8 @@ import getSongKey from '../../helpers/getSongKey';
 import getAddressKey from "../../helpers/getAddressKey";
 
 export default async function (message: ConsumeMessage) {
-  const songId = 228;
+  console.log(message.properties.headers)
+  const songId = 2000;
   const { redis } = app;
   const content = message.content.toString();
   const parsedMessage = JSON.parse(content) as unknown as IFingerPrint;
