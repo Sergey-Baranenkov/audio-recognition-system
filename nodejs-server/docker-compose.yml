@@ -1,6 +1,8 @@
 version: '3.9'
 services:
   nodejs_server:
+    depends_on:
+      - redis-node-0
     env_file:
       - .env
     build: .
@@ -10,3 +12,24 @@ services:
     volumes:
       - ./:/usr/src/app
     network_mode: host
+
+  redis-node-0:
+    image: bitnami/redis-cluster:latest
+    container_name: redis-node-0
+    volumes:
+      - redis-cluster-0:/bitnami/redis/data
+    ports:
+      - "6379:6379"
+    environment:
+      - 'REDIS_PASSWORD=developer'
+      - 'REDIS_NODES=redis-node-0'
+    networks:
+      - redis-network
+
+
+volumes:
+  redis-cluster-0:
+    driver: local
+
+networks:
+  redis-network:

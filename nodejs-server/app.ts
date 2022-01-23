@@ -13,7 +13,7 @@ import * as Path from "path";
 import setupMinioClient from "./setup/setupMinioClient";
 import amqp from "amqplib";
 import setupRabbit, {IRabbit} from "./setup/setupRabbit";
-import RedisCluster from "@node-redis/client/dist/lib/cluster";
+import RedisCluster, {RedisClusterType} from "@node-redis/client/dist/lib/cluster";
 import setupRedis from "./setup/setupRedis";
 
 class App {
@@ -23,7 +23,7 @@ class App {
 
   private _rabbit: IRabbit;
 
-  private _redis: RedisCluster<any, any>;
+  private _redis: RedisClusterType<any, any>;
 
   private server: Hapi.Server;
 
@@ -51,9 +51,9 @@ class App {
       await this.connectRabbit();
       this.log.info('Rabbit инициализирован успешно');
 
-      // this.log.info('Пытаюсь инициализировать redis...');
-      // this._redis = await setupRedis(this.config);
-      // this.log.info('Redis инициализирован успешно');
+      this.log.info('Пытаюсь инициализировать redis...');
+      await this.connectRedis();
+      this.log.info('Redis инициализирован успешно');
 
       await this.initServer();
       await this.server.start();
@@ -91,6 +91,22 @@ class App {
     }
   }
 
+  private async connectRedis() {
+    try {
+      this._redis = await setupRedis(this.config);
+      this._redis.on(
+          'error',
+          async () => {
+            this.log.error('Connection with redis lost!');
+            setTimeout(this.connectRedis.bind(this), 3000)
+          }
+      );
+      this.log.info('Connection with redis established!');
+    } catch (e) {
+      this.log.warn('Trying to reconnect to redis...');
+      setTimeout(this.connectRedis.bind(this), 3000);
+    }
+  }
 
   public get config(): AppEnvironmentVariablesType {
     return this._config;

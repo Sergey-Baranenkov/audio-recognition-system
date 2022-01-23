@@ -4,18 +4,28 @@ import extractRequestSchema from "../extractRequestSchema";
 import {JoiExtractTypes} from "../../types/JoiExtractTypes";
 import {JoiWithReadableStreamType} from "../../constants/joi";
 import Joi from "joi";
-import { createWriteStream } from "fs";
+import {v4} from 'uuid'
+import app from "../../app";
+import {promisify} from "util";
 
 const RequestSchemaPayload = Joi.object({
     file: JoiWithReadableStreamType.readable().required()
 }).required();
 
-function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayload>) {
-    const writeStream = createWriteStream('./test.wav');
-    file.pipe(writeStream);
+async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayload>) {
+    const { minio, config, rabbit } = app;
+    const upload = promisify(minio.upload).bind(minio);
+    const key = `${v4()}.mp3`
 
-    console.log(file.hapi.filename);
-    return { songName: "Имя песни: " + Math.random().toString() };
+    await upload({
+        Bucket: config.MINIO_TMP_BUCKET,
+        Key: key,
+        Body: file,
+    });
+
+
+
+    return true
 }
 
 recognizeTrack.payload = RequestSchemaPayload;
