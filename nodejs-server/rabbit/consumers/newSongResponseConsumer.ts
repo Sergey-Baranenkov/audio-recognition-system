@@ -3,10 +3,15 @@ import {IFingerPrint, IRedisAnchor} from "../../interfaces/IFingerPrint";
 import app from "../../app";
 import getSongKey from '../../helpers/getSongKey';
 import getAddressKey from "../../helpers/getAddressKey";
+import {max} from "lodash";
 
 export default async function (message: ConsumeMessage) {
-  console.log(message.properties.headers)
-  const songId = 2000;
+  const songId: number | undefined = message.properties.headers?.songId;
+  if (!songId) {
+    throw new Error(`Unrecognized songId! Got ${songId}`);
+  }
+
+
   const { redis } = app;
   const content = message.content.toString();
   const parsedMessage = JSON.parse(content) as unknown as IFingerPrint;
@@ -14,7 +19,7 @@ export default async function (message: ConsumeMessage) {
   //     const stringifiedAddresses = addresses.map((address) => JSON.stringify(address));
   //     const stringifiedAnchor = JSON.stringify([+timeInterval, songId]);
   //     await Promise.all([
-  //         redis.set(getSongKey(songId), content),
+  //         // redis.set(getSongKey(songId), content),
   //         stringifiedAddresses.map((address) => redis.rPush(getAddressKey(address), stringifiedAnchor)),
   //     ]);
   // }
@@ -58,6 +63,14 @@ export default async function (message: ConsumeMessage) {
       songTargetZoneCount[songId] = currentValue === undefined ? 1 : currentValue + 1;
     }
   }
+  const maxKey = Object.keys(songTargetZoneCount)
+      .reduce((a, b) => songTargetZoneCount[a] > songTargetZoneCount[b] ? a : b);
 
-  console.log( Object.keys(parsedMessage).length,Object.entries(songTargetZoneCount));
+  console.log(
+      `message_length: ${Object.keys(parsedMessage).length}`,
+      `targetZoneCount: ${Object.entries(songTargetZoneCount).length}`,
+      `key: ${maxKey}`,
+      `value: ${songTargetZoneCount[maxKey]}`,
+      `pairsCounter: ${Object.keys(pairsCounter).length}`
+      );
 }

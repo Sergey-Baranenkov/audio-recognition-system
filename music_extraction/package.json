@@ -1,0 +1,11 @@
+{
+  "name": "music_extraction",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "main.js",
+  "dependencies": {
+    "form-data": "^4.0.0",
+    "music-metadata": "^7.11.7",
+    "node-fetch": "^3.2.0"
+  }
+}
