@@ -24,6 +24,7 @@ export default async function (config: AppEnvironmentVariablesType) {
         timeoutInMillis
     ).catch(async (error) => {
         await channel.close();
+        await connection.close();
         if (error instanceof TimeoutError) {
             throw new Error(`Не удалось подключиться к RabbitMQ по таймауту ${timeoutInMillis}мс`);
         }

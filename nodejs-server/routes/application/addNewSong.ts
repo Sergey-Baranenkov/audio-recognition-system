@@ -8,6 +8,7 @@ import {v4} from 'uuid'
 import { createWriteStream } from "fs";
 import app from "../../app";
 import {promisify} from "util";
+import IMongoSong from "../../interfaces/IMongoSong";
 
 const RequestSchemaPayload = Joi.object({
     file: JoiWithReadableStreamType
@@ -29,33 +30,43 @@ const RequestSchemaPayload = Joi.object({
 }).required();
 
 async function addNewSong({ file, title, author, genres }: JoiExtractTypes<typeof RequestSchemaPayload>) {
-    const songId = Math.floor(Math.random() * 1000000000000);
+    const songId = v4();
+    const key = `${ songId }.mp3`;
 
+    const { mongo, config, minio, rabbit } = app;
+
+    const db = mongo.db(config.MONGO_DATABASE);
+    const collection = db.collection<IMongoSong>('music')
     const metadata = {
-        songId,
+        _id: songId,
         title,
         author,
         genres,
     }
 
-    console.log(metadata);
+    await collection.insertOne(metadata);
 
-    // const { minio, config, rabbit } = app;
-    // const upload = promisify(minio.upload).bind(minio);
-    // const key = `${v4()}.mp3`
-    //
-    // await upload({
-    //     Bucket: config.MINIO_MUSIC_BUCKET,
-    //     Key: key,
-    //     Body: file,
-    // });
-    //
-    // rabbit.channel.publish(
-    //         config.RABBIT_EXCHANGE,
-    //         config.RABBIT_NEW_SONG_ROUTING_KEY,
-    //         Buffer.from(key),
-    //         { headers: { songId } }
-    //     );
+    const upload = promisify(minio.upload).bind(minio);
+
+
+    await upload({
+        Bucket: config.MINIO_MUSIC_BUCKET,
+        Key: key,
+        Body: file,
+    });
+
+    rabbit.channel.sendToQueue(
+            config.RABBIT_NEW_SONG_REQUEST_QUEUE,
+            Buffer.from(key),
+            {
+                headers: {
+                    minioBucket: config.MINIO_MUSIC_BUCKET,
+                },
+                replyTo: config.RABBIT_NEW_SONG_RESPONSE_QUEUE,
+                correlationId: songId,
+                persistent: true,
+            }
+        );
 
     return true;
 }

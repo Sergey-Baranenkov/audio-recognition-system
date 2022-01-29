@@ -1,1 +1,1 @@
-redis-cli --cluster fix 172.22.0.2:6379 -a developer
+redis-cli --cluster fix localhost:6379 -a developer

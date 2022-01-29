@@ -20,23 +20,23 @@
   }, {
     "user": "developer",
     "vhost": "/",
-    "configure": "",
+    "configure": "^amq.gen",
     "write": ".*",
     "read": ".*"
   }],
-  "exchanges": [{
-    "name": "music-exchange",
-    "vhost": "/",
-    "type": "direct",
-    "durable": true,
-    "auto_delete": false,
-    "internal": false,
-    "arguments": {}
-  }],
+//  "exchanges": [{
+//    "name": "music-exchange",
+//    "vhost": "/",
+//    "type": "direct",
+//    "durable": true,
+//    "auto_delete": false,
+//    "internal": false,
+//    "arguments": {}
+//  }],
   "queues": [{
     "name": "music-recognition-request-queue",
     "vhost": "/",
-    "durable": false,
+    "durable": true,
     "auto_delete": false,
     "arguments": {
       "x-message-ttl": 90000
@@ -48,49 +48,41 @@
     "auto_delete": false,
     "arguments": {}
   },{
-    "name": "music-recognition-response-queue",
-    "vhost": "/",
-    "durable": false,
-    "auto_delete": false,
-    "arguments": {
-      "x-message-ttl": 10000
-    }
-  },{
     "name": "music-new-song-response-queue",
     "vhost": "/",
     "durable": true,
     "auto_delete": false,
     "arguments": {}
   }],
-  "bindings": [{
-    "source": "music-exchange",
-    "vhost": "/",
-    "destination": "music-recognition-request-queue",
-    "destination_type": "queue",
-    "routing_key": "recognition-request",
-    "arguments": {}
-  },{
-    "source": "music-exchange",
-    "vhost": "/",
-    "destination": "music-new-song-request-queue",
-    "destination_type": "queue",
-    "routing_key": "new-song-request",
-    "arguments": {}
-  },{
-    "source": "music-exchange",
-    "vhost": "/",
-    "destination": "music-recognition-response-queue",
-    "destination_type": "queue",
-    "routing_key": "recognition-response",
-    "arguments": {}
-  },{
-    "source": "music-exchange",
-    "vhost": "/",
-    "destination": "music-new-song-response-queue",
-    "destination_type": "queue",
-    "routing_key": "new-song-response",
-    "arguments": {}
-  }],
+//  "bindings": [{
+//    "source": "music-exchange",
+//    "vhost": "/",
+//    "destination": "music-recognition-request-queue",
+//    "destination_type": "queue",
+//    "routing_key": "recognition-request",
+//    "arguments": {}
+//  },{
+//    "source": "music-exchange",
+//    "vhost": "/",
+//    "destination": "music-new-song-request-queue",
+//    "destination_type": "queue",
+//    "routing_key": "new-song-request",
+//    "arguments": {}
+//  },{
+//    "source": "music-exchange",
+//    "vhost": "/",
+//    "destination": "music-recognition-response-queue",
+//    "destination_type": "queue",
+//    "routing_key": "recognition-response",
+//    "arguments": {}
+//  },{
+//    "source": "music-exchange",
+//    "vhost": "/",
+//    "destination": "music-new-song-response-queue",
+//    "destination_type": "queue",
+//    "routing_key": "new-song-response",
+//    "arguments": {}
+//  }],
   "policies":[
     {
       "vhost":"/",

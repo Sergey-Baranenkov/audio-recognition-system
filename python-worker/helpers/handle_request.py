@@ -10,8 +10,8 @@ from helpers.perform_algorithm import perform_algorithm
 
 def handle_request(ch: Channel, method: Basic.Deliver, properties: BasicProperties, body: bytes):
     filename = body.decode()
-    sound = parse_file(filename)
+    sound = parse_file(filename, properties.headers['minioBucket'])
     downsampled_sound, downsampled_frame_rate = downsample_sound(sound)
     result = perform_algorithm(downsampled_sound, downsampled_frame_rate)
-    handle_response(ch, result, properties.headers)
+    handle_response(ch, result, properties)
     ch.basic_ack(delivery_tag=method.delivery_tag)

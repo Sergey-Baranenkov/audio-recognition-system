@@ -15,11 +15,15 @@ import amqp from "amqplib";
 import setupRabbit, {IRabbit} from "./setup/setupRabbit";
 import RedisCluster, {RedisClusterType} from "@node-redis/client/dist/lib/cluster";
 import setupRedis from "./setup/setupRedis";
+import setupMongo from "./setup/setupMongo";
+import {MongoClient} from "mongodb";
 
 class App {
   private logger: Pino.Logger;
 
   private _minio: AWS.S3;
+
+  private _mongo: MongoClient;
 
   private _rabbit: IRabbit;
 
@@ -54,6 +58,10 @@ class App {
       this.log.info('Пытаюсь инициализировать redis...');
       await this.connectRedis();
       this.log.info('Redis инициализирован успешно');
+
+      this.log.info('Пытаюсь инициализировать mongo...');
+      this._mongo = await setupMongo(this.config);
+      this.log.info('Mongo инициализирован успешно');
 
       await this.initServer();
       await this.server.start();
@@ -118,6 +126,10 @@ class App {
 
   public get minio(): AWS.S3 {
     return this._minio;
+  }
+
+  public get mongo(): MongoClient {
+    return this._mongo;
   }
 
   public get rabbit(): IRabbit {

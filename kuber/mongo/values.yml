@@ -1,10 +1,10 @@
 mongodbRootPassword: "developer"
 
-shards: 2
+shards: 1
 
 mongos:
   ## @param mongos.replicas Number of replicas
   ##
-  replicas: 2
+  replicas: 1
   # мб включить для курсоров
   useStatefulSet: false
