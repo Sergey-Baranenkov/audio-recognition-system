@@ -13,15 +13,21 @@ import {IFingerPrint, IRedisAnchor} from "../../interfaces/IFingerPrint";
 import {ConsumeMessage} from "amqplib";
 import getAddressKey from "../../helpers/getAddressKey";
 import {CANNOT_RECOGNIZE_SONG_ERROR_TEXT} from "../../constants/errors";
+import _ from "lodash";
+import getSongAddressKey from "../../helpers/getSongAddressKey";
+import IMongoSong from "../../interfaces/IMongoSong";
 
 const RequestSchemaPayload = Joi.object({
     file: JoiWithReadableStreamType.readable().required()
 }).required();
 
-async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayload>) {
-    const { minio, config, rabbit, log, redis } = app;
-    const upload = promisify(minio.upload).bind(minio);
+const coeff = 0.7;
 
+async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayload>) {
+    const { minio, config, rabbit, log, redis, mongo } = app;
+    const upload = promisify(minio.upload).bind(minio);
+    const db = mongo.db(config.MONGO_DATABASE);
+    const collection = db.collection<IMongoSong>('music')
     const songId = v4();
 
     const key = `${ songId }.mp3`
@@ -105,18 +111,69 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         songTargetZoneCount[songId] = currentValue === undefined ? 1 : currentValue + 1;
       }
     }
+
+    const targetZoneCount = Object.keys(songTargetZoneCount).length
+
     const maxKey = Object.keys(songTargetZoneCount)
         .reduce((a, b) => songTargetZoneCount[a] > songTargetZoneCount[b] ? a : b);
 
+    const filteredSongKeys = Object.keys(songTargetZoneCount).filter((key) => {
+        const value = songTargetZoneCount[key];
+        return value >= targetZoneCount * coeff;
+    })
+
+    if (!filteredSongKeys.length) {
+        throw new Error(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
+    }
+
+    const result = {};
+
+    for (const song of filteredSongKeys) {
+        const deltas = {};
+        for (const [timeInterval, addresses] of Object.entries(parsedMessage)) {
+            for (const address of addresses) {
+                const key = getSongAddressKey(song, JSON.stringify(address));
+                const positionsInSong = await redis.sMembers(key);
+                for (const position of positionsInSong) {
+                    const deltaDiff = +timeInterval - +position;
+                    if (deltas[deltaDiff]){
+                        deltas[deltaDiff]++;
+                    } else {
+                        deltas[deltaDiff] = 1;
+                    }
+                }
+            }
+        }
+        const maxDelta = Object.keys(deltas)
+            .reduce((a, b) => deltas[a] > deltas[b] ? a : b);
+
+        result[song] = [maxDelta, deltas[maxDelta]];
+    }
+
+    console.log('result', result);
+
+    const filteredResult = Object.keys(result).filter(key => {
+        const matched = result[key][1];
+        return matched >= targetZoneCount * coeff;
+    })
+
+    const matchedSong: string | null = filteredResult.sort((a,b) => result[a][1] - result[b][1])[0] || null;
+
+    if (!matchedSong) {
+        throw new Error(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
+    }
+
     console.log(
         `message_length: ${Object.keys(parsedMessage).length}`,
-        `targetZoneCount: ${Object.entries(songTargetZoneCount).length}`,
+        `targetZoneCount: ${targetZoneCount}`,
         `key: ${maxKey}`,
         `value: ${songTargetZoneCount[maxKey]}`,
         `pairsCounter: ${Object.keys(pairsCounter).length}`
         );
 
-    return true;
+    const song = await collection.findOne({ _id: matchedSong })
+
+    return song;
 }
 
 recognizeTrack.payload = RequestSchemaPayload;
