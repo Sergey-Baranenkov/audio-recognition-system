@@ -38,7 +38,11 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         Body: file,
     });
 
-    const queue = await rabbit.channel.assertQueue('', { exclusive: true, durable: false, autoDelete: true });
+    // Создаем временную очередь
+    const queue = await rabbit.channel
+        .assertQueue('',
+            { exclusive: true, durable: false, autoDelete: true }
+        );
 
     rabbit.channel.sendToQueue(
             config.RABBIT_MUSIC_RECOGNITION_REQUEST_QUEUE,
@@ -51,6 +55,8 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
             }
         );
 
+    // Ждем 10 секунд ответа. Если не приходит - отсылаем пользователю ответ и отписываем консьюмера
+    // очередь должна автоматически удалиться?
     const message = await timeout(new Promise(async (resolve, reject) => {
         const { consumerTag } = await rabbit.channel.consume(queue.queue, (msg) => {
             rabbit.channel.cancel(consumerTag)
@@ -61,6 +67,7 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         return null;
     }) as ConsumeMessage | null;
 
+    // Проверить нужно ли это ?
     await rabbit.channel.deleteQueue(queue.queue);
 
     if (message === null) {
@@ -69,9 +76,11 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
 
     const content = message.content.toString();
     const parsedMessage = JSON.parse(content) as unknown as IFingerPrint;
+    const recordTargetZoneCount = Object.keys(parsedMessage).length;
 
-    const pairsCounter: { [stringifiedAnchor: string]: number } = {};
+    const pairsCounterMap: { [stringifiedAnchor: string]: number } = {};
 
+    // Считаем количество пар songId timeInterval
     for (const [timeInterval, addresses] of Object.entries(parsedMessage)) {
       const stringifiedAddresses = addresses.map((address) =>
         JSON.stringify(address)
@@ -81,9 +90,7 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         stringifiedAddresses.map((address) => redis.lRange(getAddressKey(address), 0, -1))
       );
 
-      const fulfilled = result.filter(
-      (el) => el.status === "fulfilled"
-      ) as PromiseFulfilledResult<Array<string | null>>[];
+      const fulfilled = result.filter((el) => el.status === "fulfilled") as PromiseFulfilledResult<Array<string | null>>[];
 
       const found = fulfilled
         .flatMap(res => res.value
@@ -92,41 +99,39 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         ) as IRedisAnchor[];
 
       for (const foundAnchor of found) {
-        const currentValue = pairsCounter[foundAnchor.toString()];
-        pairsCounter[foundAnchor.toString()] = currentValue === undefined ? 1 : currentValue + 1;
+        const currentValue = pairsCounterMap[foundAnchor.toString()];
+        pairsCounterMap[foundAnchor.toString()] = currentValue === undefined ? 1 : currentValue + 1;
       }
     }
-    if (!Object.keys(pairsCounter).length) {
+    if (!Object.keys(pairsCounterMap).length) {
         throw internal(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
     }
 
-    const songTargetZoneCount: { [songId: string]: number } = {};
+    const songTargetZoneCounterMap: { [songId: string]: number } = {};
 
-    for (const [pair, count] of Object.entries(pairsCounter)) {
+    // Считаем сколько метчей целевых зон от каждой песни
+    for (const [pair, count] of Object.entries(pairsCounterMap)) {
       if (count < 4) {
-        delete pairsCounter[pair];
+        delete pairsCounterMap[pair];
       } else {
         const songId = pair.split(',')[1] as string;
-        const currentValue = songTargetZoneCount[songId];
-        songTargetZoneCount[songId] = currentValue === undefined ? 1 : currentValue + 1;
+        const currentValue = songTargetZoneCounterMap[songId];
+        songTargetZoneCounterMap[songId] = currentValue === undefined ? 1 : currentValue + 1;
       }
     }
 
-    const targetZoneCount = Object.keys(songTargetZoneCount).length
-
-    const maxKey = Object.keys(songTargetZoneCount)
-        .reduce((a, b) => songTargetZoneCount[a] > songTargetZoneCount[b] ? a : b);
-
-    const filteredSongKeys = Object.keys(songTargetZoneCount).filter((key) => {
-        const value = songTargetZoneCount[key];
-        return value >= targetZoneCount * coeff;
+    // Отфильтровываем результаты с низким показателем
+    const filteredSongKeys = Object.keys(songTargetZoneCounterMap).filter((key) => {
+        const value = songTargetZoneCounterMap[key];
+        return value >= recordTargetZoneCount * coeff;
     })
 
     if (!filteredSongKeys.length) {
-        throw new Error(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
+        throw internal(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
     }
 
-    const result = {};
+    // Сопоставляем результаты по времени
+    const result: {[songId: string]: [string, number]} = {};
 
     for (const song of filteredSongKeys) {
         const deltas = {};
@@ -150,30 +155,27 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         result[song] = [maxDelta, deltas[maxDelta]];
     }
 
-    console.log('result', result);
-
+    // Отфильтровываем результаты с низким показателем
     const filteredResult = Object.keys(result).filter(key => {
         const matched = result[key][1];
-        return matched >= targetZoneCount * coeff;
+        return matched >= recordTargetZoneCount * coeff;
     })
 
+    // Берем песню с наивысшим матчем
     const matchedSong: string | null = filteredResult.sort((a,b) => result[a][1] - result[b][1])[0] || null;
 
     if (!matchedSong) {
-        throw new Error(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
+        throw internal(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
     }
 
-    console.log(
-        `message_length: ${Object.keys(parsedMessage).length}`,
-        `targetZoneCount: ${targetZoneCount}`,
-        `key: ${maxKey}`,
-        `value: ${songTargetZoneCount[maxKey]}`,
-        `pairsCounter: ${Object.keys(pairsCounter).length}`
-        );
+    // Ищем в бд
+    const matchedSongFromDb = await collection.findOne({ _id: matchedSong });
 
-    const song = await collection.findOne({ _id: matchedSong })
+    if (!matchedSongFromDb) {
+        throw internal(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
+    }
 
-    return song;
+    return matchedSongFromDb;
 }
 
 recognizeTrack.payload = RequestSchemaPayload;
