@@ -5,11 +5,8 @@ from pika.channel import Channel
 import pika
 
 def handle_response(ch: Channel, result: list, properties: dict):
-    print(properties)
-
     json_data = json.dumps(result)
 
-    print('handled')
     ch.basic_publish(
         exchange='', # Если не указан то routing_key === queue_name
         routing_key=properties.reply_to,

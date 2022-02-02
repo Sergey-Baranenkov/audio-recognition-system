@@ -14,19 +14,23 @@ const directoriesInMainFolder = filesInMainFolder
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name);
 
+const genresToUpload = 10;
 let counter = 0;
 
 const endpoint = 'http://localhost:1337/add-song';
 
-label:
 for (const directory of directoriesInMainFolder) {
+    if (counter >= genresToUpload) {
+        break;
+    }
+    counter++;
+
+    console.log('Current genre', directory);
+
     const filesInSubdirectory = fs.readdirSync(`${musicFolder}/${directory}`);
     for await (const file of filesInSubdirectory) {
-        console.log(directory, file);
         const link = `${musicFolder}/${directory}/${file}`;
         const { common } = await parseMP3Metadata(link);
-
-        console.log(common)
         const body = new FormData();
         body.append('title', common.title || 'Unknown song');
         body.append('author', common.artist || 'Unknown artist');
@@ -34,11 +38,6 @@ for (const directory of directoriesInMainFolder) {
         body.append('file', fs.createReadStream(link));
 
         await fetch(endpoint, { method: "POST", body });
-
-
-        counter ++;
-        if (counter > 100) {
-            break label;
-        }
     }
+    console.log('files of genre uploaded:', filesInSubdirectory.length);
 }

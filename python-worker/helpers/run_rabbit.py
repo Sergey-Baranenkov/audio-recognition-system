@@ -2,14 +2,15 @@ import pika
 
 from helpers.handle_request import handle_request
 
+def parse_queues_to_list(request_queues: str):
+    return request_queues.split(',')
 
 def run_rabbit(
         username: str,
         password: str,
         host: str,
         port: int,
-        request_queue: str,
-        consumer_tag: str
+        request_queues: str,
 ):
     credentials = pika.PlainCredentials(username, password)
     connection = pika.BlockingConnection(
@@ -17,11 +18,14 @@ def run_rabbit(
     )
     channel = connection.channel()
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(
-        request_queue,
-        handle_request,
-        consumer_tag=consumer_tag,
-    )
+
+    queues = parse_queues_to_list(request_queues)
+
+    for queue in queues:
+        channel.basic_consume(
+            queue,
+            handle_request,
+        )
 
     print('Starting consuming messages...')
     channel.start_consuming()
