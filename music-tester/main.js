@@ -11,7 +11,7 @@ const musicFolder = '/home/araxal/harddrive/fma_small';
 
 const cutMusicFolder = '/home/araxal/harddrive/fma_small_cut';
 
-const timeInterval = '7s';
+const timeInterval = '10s';
 
 const genresToTest = 1;
 let counter = 0;
@@ -54,8 +54,10 @@ for (const directory of directoriesInMainFolder) {
         if (result && result.title && result.title === common.title && result.author === common.artist) {
             recognizedCounter ++;
         } else if (result && result.title) {
+            console.log('incorrect', file, common, result)
             incorrectlyRecognizedCounter++;
         } else {
+            console.log('unrecognized', file, common)
             unrecognizedCounter++ ;
         }
     }

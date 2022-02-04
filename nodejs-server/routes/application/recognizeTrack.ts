@@ -155,14 +155,16 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         result[song] = [maxDelta, deltas[maxDelta]];
     }
 
+    // console.log(result);
     // Отфильтровываем результаты с низким показателем
     const filteredResult = Object.keys(result).filter(key => {
         const matched = result[key][1];
         return matched >= recordTargetZoneCount * coeff;
     })
 
+    // console.log(filteredResult);
     // Берем песню с наивысшим матчем
-    const matchedSong: string | null = filteredResult.sort((a,b) => result[a][1] - result[b][1])[0] || null;
+    const matchedSong: string | null = filteredResult.sort((a,b) => result[b][1] - result[a][1])[0] || null;
 
     if (!matchedSong) {
         throw internal(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
