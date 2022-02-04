@@ -1,36 +1,17 @@
 Здесь распологается скрипт по тестированию распознавания
 
 10s
-recognizedCounter: 27,
-incorrectlyRecognizedCounter: 28,
+recognizedCounter: 53,
+incorrectlyRecognizedCounter: 2,
 unrecognizedCounter: 7
 
 7s
-recognizedCounter: 15,
-incorrectlyRecognizedCounter: 37,
+recognizedCounter: 47,
+incorrectlyRecognizedCounter: 5,
 unrecognizedCounter: 10
 
 
 5s
-recognizedCounter: 15,
-incorrectlyRecognizedCounter: 43,
-unrecognizedCounter: 4
-
-
-Если среднее бинов берется по текущему бину а не по всей песне:
-
-10s
-recognizedCounter: 24,
-incorrectlyRecognizedCounter: 31,
-unrecognizedCounter: 7
-
-7s
-recognizedCounter: 18,
-incorrectlyRecognizedCounter: 38,
-unrecognizedCounter: 6
-
-
-5s
-recognizedCounter: 8,
-incorrectlyRecognizedCounter: 47,
+recognizedCounter: 44,
+incorrectlyRecognizedCounter: 11,
 unrecognizedCounter: 7

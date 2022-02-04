@@ -11,7 +11,7 @@ const musicFolder = '/home/araxal/harddrive/fma_small';
 
 const cutMusicFolder = '/home/araxal/harddrive/fma_small_cut';
 
-const timeInterval = '10s';
+const timeInterval = '5s';
 
 const genresToTest = 1;
 let counter = 0;
