@@ -1,0 +1,24 @@
+.track-container {
+    width: auto;
+}
+
+.track-title {
+    margin: 0;
+    font-family: "Nova Cut", sans-serif;
+    font-weight: lighter;
+    font-size: 24px;
+}
+
+.track-author {
+    font-family: "Roboto Thin", sans-serif;
+    font-weight: lighter;
+    font-size: 12px;
+}
+
+.tags-container {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 120px;
+}
+

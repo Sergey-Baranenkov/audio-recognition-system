@@ -14,4 +14,4 @@ def parse_file(filename, bucket):
 
     obj = client.get_object(Bucket=bucket, Key=filename)
     file = io.BytesIO(obj['Body'].read())
-    return AudioSegment.from_file(file, format='mp3')
+    return AudioSegment.from_file(file)

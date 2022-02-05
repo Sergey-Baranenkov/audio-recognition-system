@@ -1,0 +1,18 @@
+.audio-button {
+    border: none;
+    outline: none;
+    display: block;
+    border-radius: 20px;
+    background-color: white;
+    height: 48px;
+    width: 48px;
+    cursor: pointer;
+}
+
+.audio-button_play{
+    background: url("/images/play.svg") no-repeat center;
+}
+
+.audio-button_pause{
+    background: url("/images/pause.svg") no-repeat center;
+}

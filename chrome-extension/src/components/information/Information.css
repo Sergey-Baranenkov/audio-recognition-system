@@ -1,0 +1,15 @@
+.information-container {
+    width: 160px;
+}
+
+.information-header {
+    font-family: "Roboto Thin", sans-serif;
+    font-weight: normal;
+    font-size: 24px;
+}
+
+.information-description {
+    font-family: "Roboto Thin", sans-serif;
+    font-weight: lighter;
+    font-size: 12px;
+}

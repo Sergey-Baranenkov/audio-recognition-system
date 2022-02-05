@@ -1,0 +1,19 @@
+.tag-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 25px;
+    width: fit-content;
+    height: 25px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.tag-text {
+    color: white;
+    font-family: "Roboto Thin", sans-serif;
+    font-weight: normal;
+    font-size: 12px;
+    letter-spacing: 1px;
+}

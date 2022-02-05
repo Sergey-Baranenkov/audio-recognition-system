@@ -8,34 +8,44 @@ body {
     justify-content: space-between;
     align-items: center;
     flex-direction: row;
-    width: 400px;
-    height: 200px;
+    gap: 18px;
+    min-width: 400px;
+    width: fit-content;
+    height: 180px;
+
+    background-color: #DDDDDD;
+
+    padding: 0 18px;
 }
 
 .status-bar {
     display: flex;
     justify-content: center;
     align-items: center;
+
     width: 50%;
     height: 100%;
+
     box-sizing: border-box;
-    /*border: 1px solid red;*/
 }
 
 .recognize-button {
-    background: #002b01 url("/images/logo.png") no-repeat center;
-    background-size: 120px 120px;
+    background: #120C27 url("/images/logo.png") no-repeat center;
+    background-size: 100px 100px;
+
+
+    height: 160px;
+    width: 160px;
+
     border: none;
-    height: 150px;
-    width: 150px;
     border-radius: 50%;
     outline: none;
-    margin: 0 auto;
+
     cursor: pointer;
 }
 
 .recognize-button:hover {
-    background-color: #003d02;
+    background-color: #191035;
 }
 
 @keyframes rotate {
@@ -44,7 +54,7 @@ body {
     }
 
     50%{
-        transform: rotate(180deg) scale(1.1);
+        transform: rotate(180deg) scale(1.05);
     }
     100% {
         transform: rotate(360deg) scale(1);
@@ -53,4 +63,12 @@ body {
 
 .rotating {
     animation: rotate 2s linear infinite;
+}
+
+.arrow-back {
+    background: url("/images/arrow_back.svg") no-repeat center;
+    background-size: 24px 24px;
+
+    height: 100%;
+    width: 24px;
 }
