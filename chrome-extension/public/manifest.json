@@ -7,5 +7,10 @@
   "action": {
     "default_popup": "index.html"
   },
+
+  "icons": {
+    "128": "extension_logo.png"
+  },
+
   "permissions": ["tabCapture", "tabs"]
 }

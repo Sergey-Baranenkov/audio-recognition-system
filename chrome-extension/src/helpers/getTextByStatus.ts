@@ -14,7 +14,7 @@ export function getTextByStatus(status: StatusEnum): IInformationProps | null {
             }
         case StatusEnum.recording:
             return {
-                header: "Ищем ваш великолепный трек...😎",
+                header: "Ищем ваш великолепный трек...❤",
             }
         default:
             return null;

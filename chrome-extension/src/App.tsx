@@ -42,7 +42,7 @@ function App() {
     const sendBlob = async (blob: Blob) => {
         const formData = new FormData();
         formData.append('file', blob, 'music.wav');
-        const res = await fetch('http://localhost:1337/recognize-track', { method: 'POST', body: formData });
+        const res = await fetch(process.env.REACT_APP_RECOGNITION_ENDPOINT as string, { method: 'POST', body: formData });
 
         if (res.status === 200) {
             const { title, author, genres, src }: IRecognitionResponse = await res.json();

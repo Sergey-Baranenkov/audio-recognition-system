@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "diploma-mongo-initial-script-job"
+spec:
+  backoffLimit: 0
+  parallelism: 1
+  completions: 1
+  template:
+    spec:
+      containers:
+        - name: "diploma-minio-tmp-bucket-ttl-job"
+          image: minio/mc
+          command: ["mc"]
+          args: ["-c", "mongosh --host diploma-mongo-mongodb-sharded --username root --password developer --file /data/scripts/initial-script.js"]
+          volumeMounts:
+            - name: "initial-script"
+              mountPath: "/data/scripts"
+              readOnly: true
+
+      restartPolicy: Never
+
+      volumes:
+        - name: "initial-script"
+          secret:
+            secretName: "diploma-mongo-initial"
+
