@@ -1,3 +1,5 @@
+import getSongKey from "./getSongKey";
+
 export default function (songId: any, addr: string) {
-    return `song#${songId}:addr#${addr}`;
+    return `${getSongKey(songId)}:addr#${addr}`;
 }

@@ -25,14 +25,20 @@ async function songList({ offset, limit, search }: JoiExtractTypes<typeof Reques
         }
     }: {}
 
-    return collection.find<IMongoSong>(filter, { skip: offset, limit, projection: ['title', 'author', 'genres'] }).toArray()
+    return collection.find<IMongoSong>(
+        filter,
+        { sort: ['author', 'title'],
+            skip: offset,
+            limit,
+            projection: ['title', 'author', 'genres', 'src']
+        }).toArray();
 }
 
 songList.query = RequestSchemaQuery;
 
 const route: ServerRoute = {
     method: 'GET',
-    path: '/song-list',
+    path: '/song',
     handler: handleService(songList),
     options: {
         validate: extractRequestSchema(songList),

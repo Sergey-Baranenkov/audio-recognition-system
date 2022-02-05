@@ -149,20 +149,26 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
                 }
             }
         }
-        const maxDelta = Object.keys(deltas)
+
+        const deltaKeys = Object.keys(deltas);
+
+        // Если песня была удалена, но осталась в поиске по адресу
+        if (!deltaKeys.length) {
+            continue;
+        }
+
+        const maxDelta = deltaKeys
             .reduce((a, b) => deltas[a] > deltas[b] ? a : b);
 
         result[song] = [maxDelta, deltas[maxDelta]];
     }
 
-    // console.log(result);
     // Отфильтровываем результаты с низким показателем
     const filteredResult = Object.keys(result).filter(key => {
         const matched = result[key][1];
         return matched >= recordTargetZoneCount * coeff;
     })
-
-    // console.log(filteredResult);
+    
     // Берем песню с наивысшим матчем
     const matchedSong: string | null = filteredResult.sort((a,b) => result[b][1] - result[a][1])[0] || null;
 
