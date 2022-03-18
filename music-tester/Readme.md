@@ -1,17 +1,24 @@
 Здесь распологается скрипт по тестированию распознавания
 
+Total: 1216
+
 10s
-recognizedCounter: 53,
-incorrectlyRecognizedCounter: 2,
-unrecognizedCounter: 7
+globalRecognizedCounter: 910,
+globalIncorrectlyRecognizedCounter: 69,
+globalUnrecognizedCounter: 237
+
+0,748355263158
 
 7s
-recognizedCounter: 47,
-incorrectlyRecognizedCounter: 5,
-unrecognizedCounter: 10
+globalRecognizedCounter: 835,
+globalIncorrectlyRecognizedCounter: 153,
+globalUnrecognizedCounter: 228
 
+0,686677631579
 
 5s
-recognizedCounter: 44,
-incorrectlyRecognizedCounter: 11,
-unrecognizedCounter: 7
+globalRecognizedCounter: 742,
+globalIncorrectlyRecognizedCounter: 286,
+globalUnrecognizedCounter: 188
+
+0,610197368421

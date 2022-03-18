@@ -1,5 +1,5 @@
 {
-  "name": "nodejs_course",
+  "name": "nodejs-server",
   "version": "2.2.8",
   "main": "start.ts",
   "start": "node start.js",

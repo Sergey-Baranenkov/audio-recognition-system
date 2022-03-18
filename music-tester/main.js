@@ -11,17 +11,16 @@ const musicFolder = '/home/araxal/harddrive/fma_small';
 
 const cutMusicFolder = '/home/araxal/harddrive/fma_small_cut';
 
-const timeInterval = '5s';
+const timeInterval = '7s';
 
-const genresToTest = 1;
+const genresToTest = 30;
 let counter = 0;
 
 const endpoint = 'http://localhost:1337/recognize-track';
 
-
-let incorrectlyRecognizedCounter = 0;
-let recognizedCounter = 0;
-let unrecognizedCounter = 0;
+let globalIncorrectlyRecognizedCounter = 0;
+let globalRecognizedCounter = 0;
+let globalUnrecognizedCounter = 0;
 
 const filesInMainFolder = fs.readdirSync(musicFolder, { withFileTypes: true }) ;
 const directoriesInMainFolder = filesInMainFolder
@@ -29,6 +28,10 @@ const directoriesInMainFolder = filesInMainFolder
     .map(dirent => dirent.name);
 
 for (const directory of directoriesInMainFolder) {
+    let incorrectlyRecognizedCounter = 0;
+    let recognizedCounter = 0;
+    let unrecognizedCounter = 0;
+
     if (counter >= genresToTest) {
         break;
     }
@@ -53,13 +56,17 @@ for (const directory of directoriesInMainFolder) {
 
         if (result && result.title && result.title === common.title && result.author === common.artist) {
             recognizedCounter ++;
+            globalRecognizedCounter++;
         } else if (result && result.title) {
-            console.log('incorrect', file, common, result)
+            //console.log('incorrect', file, common, result)
+            globalIncorrectlyRecognizedCounter++;
             incorrectlyRecognizedCounter++;
         } else {
-            console.log('unrecognized', file, common)
+            //console.log('unrecognized', file, common)
+            globalUnrecognizedCounter++;
             unrecognizedCounter++ ;
         }
     }
     console.log('Result for genre:', { recognizedCounter, incorrectlyRecognizedCounter, unrecognizedCounter });
 }
+console.log('Total:', { globalRecognizedCounter, globalIncorrectlyRecognizedCounter, globalUnrecognizedCounter });

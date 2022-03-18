@@ -14,7 +14,7 @@ const directoriesInMainFolder = filesInMainFolder
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name);
 
-const genresToUpload = 10;
+const genresToUpload = 30;
 let counter = 0;
 
 const endpoint = 'http://localhost:1337/add-song';

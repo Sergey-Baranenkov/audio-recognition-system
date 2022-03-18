@@ -1,1 +1,1 @@
-Memento mori
+Python worker deployed
