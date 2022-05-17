@@ -13,10 +13,10 @@ const cutMusicFolder = '/home/araxal/harddrive/fma_small_cut';
 
 const timeInterval = '5s';
 
-const genresToTest = 1;
+const genresToTest = 15;
 let counter = 0;
 
-const endpoint = 'http://localhost:1337/recognize-track';
+const endpoint = 'http://127.0.0.1:1337/recognize-track';
 
 let globalIncorrectlyRecognizedCounter = 0;
 let globalRecognizedCounter = 0;

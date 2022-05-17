@@ -22,18 +22,19 @@ const RequestSchemaPayload = Joi.object({
     file: JoiWithReadableStreamType.readable().required()
 }).required();
 
-const coeff = 1;
+const coeff = 0.9;
 
 async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayload>) {
-    console.time('upload file')
+    // Init db clients
     const { minio, config, rabbit, log, redis, mongo } = app;
     const upload = promisify(minio.upload).bind(minio);
     const db = mongo.db(config.MONGO_DATABASE);
     const collection = db.collection<IMongoSong>('music')
     const songId = v4();
 
+    console.time('upload file');
     const key = `${ songId }.mp3`
-    // загружаем файл во временный бакет
+    // Upload file to temporary bucket to be parsed by workers
     await upload({
         Bucket: config.MINIO_TMP_BUCKET,
         Key: key,
@@ -42,7 +43,7 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
     console.timeEnd('upload file');
 
     console.time('send to queue');
-    // Создаем временную очередь
+    // Create temporary queue for rpc call
     const queue = await rabbit.channel
         .assertQueue('',
             { exclusive: true, durable: false, autoDelete: true }
@@ -62,9 +63,7 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
     console.timeEnd('send to queue');
 
     console.time('awaiting python');
-
-    // Ждем 10 секунд ответа. Если не приходит - отсылаем пользователю ответ и отписываем консьюмера
-    // очередь должна автоматически удалиться?
+    // Wait 10 seconds for answer from worker. If there is no answer - drop error
     const message = await timeout(new Promise(async (resolve, reject) => {
         const { consumerTag } = await rabbit.channel.consume(queue.queue, (msg) => {
             rabbit.channel.cancel(consumerTag)
@@ -75,7 +74,6 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         return null;
     }) as ConsumeMessage | null;
 
-    // Проверить нужно ли это ?
     await rabbit.channel.deleteQueue(queue.queue);
 
     if (message === null) {
@@ -84,64 +82,61 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
     console.timeEnd('awaiting python');
 
     console.time('parsing python');
-    // парсим входящий результат
+    // Parse input result
     const content = message.content.toString();
     const parsedMessage = JSON.parse(content) as unknown as IFingerPrint;
-
     const recordTargetZoneCount = Object.keys(parsedMessage).length;
 
     console.timeEnd('parsing python');
+
+
+
+    console.time('finding pairs');
+
+    // Finding all anchors that have at least one fragment address
     const pairsCounterMap: { [stringifiedAnchor: string]: number } = {};
-
-    // Считаем количество пар songId timeInterval
-    //console.log(parsedMessage);
-    console.time('first part');
-    let fpRedisCnt = 0, fpCnt = 0;
-    // Перебираем адреса чтобы найти в каких песнях они встречаются
+    const localCache = {};
     for (const [timeInterval, addresses] of Object.entries(parsedMessage)) {
-
-      // адреса в определеный промежуток времени
       const stringifiedAddresses = addresses.map((address) =>
         JSON.stringify(address)
       );
-      if (fpRedisCnt === 0) {
-          console.log(stringifiedAddresses);
-      }
-      fpRedisCnt+=stringifiedAddresses.length;
-      const result = await Promise.allSettled(
-        stringifiedAddresses.map((address) => redis.lRange(getAddressKey(address), 0, -1))
-      );
 
-      const fulfilled = result.filter((el) => el.status === "fulfilled") as PromiseFulfilledResult<Array<string | null>>[];
+      const foundAnchors = (await Promise.allSettled(
+        stringifiedAddresses.map((address) => {
+            if (!localCache[address]) {
+                localCache[address] = redis.lRange(getAddressKey(address), 0, -1);
+            }
 
-      const found = fulfilled
-        .flatMap(res => res.value
-            .filter(el => (el !== null))
-            .map(el => JSON.parse(el as string))
-        ) as IRedisAnchor[];
-      // console.log(found.length);
-      // if (fpCnt === 0) {
-      //     console.log(found);
-      // }
-      for (const foundAnchor of found) {
-        fpCnt++;
-        const currentValue = pairsCounterMap[foundAnchor.toString()];
-        pairsCounterMap[foundAnchor.toString()] = currentValue === undefined ? 1 : currentValue + 1;
+            return localCache[address];
+        })
+      ))
+      .filter((el) => el.status === "fulfilled")
+      .flatMap((res: PromiseFulfilledResult<Array<string | null>>) => res.value
+        .filter(el => (el !== null))
+        .map(el => JSON.parse(el as string))
+      ) as IRedisAnchor[]
+
+      for (const anchor of foundAnchors) {
+        const stringifiedAnchor = anchor.toString();
+        const currentValue = pairsCounterMap[stringifiedAnchor];
+        pairsCounterMap[stringifiedAnchor] = currentValue === undefined ? 1 : currentValue + 1;
       }
     }
+    console.timeEnd('finding pairs');
 
-    console.log(Math.max(...new Set(Object.values(pairsCounterMap))));
-    console.log('fpCnt', fpCnt, 'fpRedisCnt', fpRedisCnt);
-    console.log('recordTargetZoneCount', recordTargetZoneCount, 'pairsCounterMap', Object.keys(pairsCounterMap).length);
-    console.timeEnd('first part');
+    console.log(
+        'recordTargetZoneCount', recordTargetZoneCount,
+        'pairsCounterMap', Object.keys(pairsCounterMap).length
+    );
+
+    // If no match - drop error
     if (!Object.keys(pairsCounterMap).length) {
         throw internal(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
     }
 
+    console.time('count target zone match by song');
+    // Count how many target zones each song match with the sample
     const songTargetZoneCounterMap: { [songId: string]: number } = {};
-
-    console.time('second part');
-    // Считаем сколько метчей целевых зон от каждой песни
     for (const [pair, count] of Object.entries(pairsCounterMap)) {
       if (count < 4) {
         delete pairsCounterMap[pair];
@@ -151,36 +146,42 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
         songTargetZoneCounterMap[songId] = currentValue === undefined ? 1 : currentValue + 1;
       }
     }
-    console.log('song count', Object.keys(songTargetZoneCounterMap).length);
+
+    const filteredSongKeys = Object.keys(songTargetZoneCounterMap)
+        .filter((key) => {
+            const value = songTargetZoneCounterMap[key];
+            return value >= recordTargetZoneCount * coeff;
+        })
+        .sort((a,b) => songTargetZoneCounterMap[b] - songTargetZoneCounterMap[a])
+        .slice(0,25);
+
     console.log('pairsCounterMap after filter', Object.keys(pairsCounterMap).length);
-    // Отфильтровываем результаты с низким показателем
-    const filteredSongKeys = Object.keys(songTargetZoneCounterMap).filter((key) => {
-        const value = songTargetZoneCounterMap[key];
-        //console.log(key)
-        return value >= recordTargetZoneCount * coeff;
-    })
     console.log('song count after filter', filteredSongKeys.length);
+
     if (!filteredSongKeys.length) {
         throw internal(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
     }
-    console.timeEnd('second part');
-    // Сопоставляем результаты по времени
+    console.timeEnd('count target zone match by song');
+
+
+    console.time('Matching deltas');
+
+    // For every song find [maxDelta, maxCountOfMatches] and preserve the best ones
     const result: {[songId: string]: [string, number]} = {};
-
-    console.log(
-        recordTargetZoneCount,
-        filteredSongKeys.length
-    );
-
-    console.time('third part');
-    let cnt = 0;
-    for (const song of filteredSongKeys) {
+    for await (const song of filteredSongKeys) {
         const deltas = {};
-        for (const [timeInterval, addresses] of Object.entries(parsedMessage)) {
-            for (const address of addresses) {
-                cnt ++;
+        const localCache = {};
+
+        // Test every shift in song
+        for await (const [timeInterval, addresses] of Object.entries(parsedMessage)) {
+            for await (const address of addresses) {
                 const key = getSongAddressKey(song, JSON.stringify(address));
-                const positionsInSong = await redis.sMembers(key);
+                if (!localCache[key]) {
+                    localCache[key] = await redis.sMembers(key);
+                }
+
+                const positionsInSong = localCache[key];
+
                 for (const position of positionsInSong) {
                     const deltaDiff = +timeInterval - +position;
                     if (deltas[deltaDiff]){
@@ -191,35 +192,42 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
                 }
             }
         }
+
         const deltaKeys = Object.keys(deltas);
 
-        // Если песня была удалена, но осталась в поиске по адресу
+        // If song was deleted but preserved in redis (due to specific implementation of deleting) - skip it
         if (!deltaKeys.length) {
             continue;
         }
 
+        // Getting delta with best result
         const maxDelta = deltaKeys
             .reduce((a, b) => deltas[a] > deltas[b] ? a : b);
 
         result[song] = [maxDelta, deltas[maxDelta]];
     }
-    console.log('counter', cnt);
-    console.timeEnd('third part');
-    // Отфильтровываем результаты с низким показателем
+
+    console.timeEnd('Matching deltas');
+
+    // Filter songs with match less than targetZoneCount of sample
     const filteredResult = Object.keys(result).filter(key => {
         const matched = result[key][1];
         return matched >= recordTargetZoneCount * coeff;
     })
-    console.log(Object.values(result));
-    console.log(Object.keys(result).length, filteredResult.length);
-    // Берем песню с наивысшим матчем
+
+    console.log(
+        "Resulting song count after filtering",
+        filteredResult.length
+    );
+
+    // Take the best matched song of all resulting songs
     const matchedSong: string | null = filteredResult.sort((a,b) => result[b][1] - result[a][1])[0] || null;
 
     if (!matchedSong) {
         throw internal(CANNOT_RECOGNIZE_SONG_ERROR_TEXT);
     }
 
-    // Ищем в бд
+    // Find its metadata in database
     const matchedSongFromDb = await collection.findOne({ _id: matchedSong });
 
     if (!matchedSongFromDb) {

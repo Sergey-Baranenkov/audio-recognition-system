@@ -2,7 +2,7 @@ import numpy as np
 
 
 def compute_most_powerful_bin_indices(samples, bin_groups=(
-(0, 10), (10, 20), (20, 40), (40, 80), (80, 160), (160, 513))) -> list:
+(0, 20), (20, 40), (40, 80), (80, 160), (160, 513))) -> list:
     result = []
     for sample in samples:
         bins = []
