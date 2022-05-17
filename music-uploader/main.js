@@ -14,10 +14,10 @@ const directoriesInMainFolder = filesInMainFolder
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name);
 
-const genresToUpload = 30;
+const genresToUpload = 15;
 let counter = 0;
 
-const endpoint = 'http://localhost:1337/add-song';
+const endpoint = 'http://127.0.0.1:1337/add-song';
 
 for (const directory of directoriesInMainFolder) {
     if (counter >= genresToUpload) {

@@ -16,7 +16,7 @@ def get_windowed_fft_result(data, frame_rate: int, window_size: int, window_func
             break
 
         windowed_chunk = chunk * w
-        fft_res = np.abs(rfft(windowed_chunk))
+        fft_res = (2 / window_size) * np.abs(rfft(windowed_chunk))
 
         y_freq.append(fft_res)
 

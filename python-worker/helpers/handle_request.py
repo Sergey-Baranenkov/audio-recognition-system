@@ -12,7 +12,8 @@ def handle_request(ch: Channel, method: Basic.Deliver, properties: BasicProperti
     filename = body.decode()
     sound = parse_file(filename, properties.headers['minioBucket'])
     downsampled_sound, downsampled_frame_rate = downsample_sound(sound)
-    result = perform_algorithm(downsampled_sound, downsampled_frame_rate)
+    #тут вероятно добавить 3 параметр 4096 / 4 так как мы в 4 раза даунсемплим
+    result = perform_algorithm(downsampled_sound, downsampled_frame_rate, 1024)
     handle_response(ch, result, properties)
     print('handled', method.routing_key)
     ch.basic_ack(delivery_tag=method.delivery_tag)

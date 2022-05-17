@@ -11,4 +11,4 @@ def butter_lowpass(cutoff, frame_rate, order=5):
 
 def lowpass_filter(data, cutoff, frame_rate, order=5) -> np.ndarray:
     b, a = butter_lowpass(cutoff, frame_rate, order=order)
-    return filtfilt(b, a, data).astype(int)
+    return filtfilt(b, a, data).astype(np.short)

@@ -11,9 +11,9 @@ const musicFolder = '/home/araxal/harddrive/fma_small';
 
 const cutMusicFolder = '/home/araxal/harddrive/fma_small_cut';
 
-const timeInterval = '7s';
+const timeInterval = '5s';
 
-const genresToTest = 30;
+const genresToTest = 1;
 let counter = 0;
 
 const endpoint = 'http://localhost:1337/recognize-track';

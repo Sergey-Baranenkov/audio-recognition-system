@@ -10,7 +10,7 @@ def compute_most_powerful_bin_indices(samples, bin_groups=(
             interval = sample[min_bin:max_bin]
             (m, i) = max((v, i) for i, v in enumerate(interval))
 
-            bins.append((m, i))
+            bins.append((m, i + min_bin))
 
         result.append(bins)
 
