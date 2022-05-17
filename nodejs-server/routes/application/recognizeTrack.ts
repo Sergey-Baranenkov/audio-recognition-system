@@ -153,7 +153,7 @@ async function recognizeTrack({ file }: JoiExtractTypes<typeof RequestSchemaPayl
             return value >= recordTargetZoneCount * coeff;
         })
         .sort((a,b) => songTargetZoneCounterMap[b] - songTargetZoneCounterMap[a])
-        .slice(0,25);
+        //.slice(0,25);
 
     console.log('pairsCounterMap after filter', Object.keys(pairsCounterMap).length);
     console.log('song count after filter', filteredSongKeys.length);
