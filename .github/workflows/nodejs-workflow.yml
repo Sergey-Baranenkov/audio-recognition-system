@@ -1,0 +1,23 @@
+name: Node.js server CI
+
+on:
+  push:
+    paths:
+      - nodejs-server/**
+
+jobs:
+  docker_build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nodejs-server
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: build
+        run: docker build . -t araxal/diploma-nodejs-server:latest
+
+      - name: push
+        run: |
+          docker login --username ${{ secrets.DOCKER_USERNAME }} --password=${{ secrets.DOCKER_PASSWORD }}
+          docker push araxal/diploma-nodejs-server:latest
