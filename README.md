@@ -1,4 +1,6 @@
 ## Music Track Recognition System
+[![Node.js server CI](https://github.com/Sergey-Baranenkov/audio-recognition-system/actions/workflows/nodejs-workflow.yml/badge.svg)](https://github.com/Sergey-Baranenkov/audio-recognition-system/actions/workflows/nodejs-workflow.yml)
+[![Python worker CI](https://github.com/Sergey-Baranenkov/audio-recognition-system/actions/workflows/python-workflow.yml/badge.svg)](https://github.com/Sergey-Baranenkov/audio-recognition-system/actions/workflows/python-workflow.yml)
 
 This is a distributed music track recognition system 
 that uses A.Wang's Shazam algorithm under the hood.
