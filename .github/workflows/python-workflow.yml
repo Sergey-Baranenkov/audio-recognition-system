@@ -8,11 +8,16 @@ on:
 jobs:
   docker_build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-worker
     steps:
       - uses: actions/checkout@v2
 
-      - name: test
-        run: docker ps -a
+      - name: build
+        run: docker build . -t araxal/diploma-python-worker:latest
 
-      - name: list files
-        run: ls python-worker
+      - name: push
+        run: |
+          docker login --username ${{ secrets.DOCKER_USERNAME }} --password=${{ secrets.DOCKER_PASSWORD }}
+          docker push araxal/diploma-python-worker:latest
