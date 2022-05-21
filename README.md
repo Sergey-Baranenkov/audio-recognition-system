@@ -14,6 +14,9 @@ It consists of the next components:
 - Python microservice with fingerprinting algorithm.
 - Node.js microservice with CRUD for music library and search algorithm.
 - RabbitMQ for asynchronous inter-service communication.
+- Chrome extension as a client.
+It captures audio stream of the current tab, divides it by 5 seconds 
+and sends for recognition to backend
 
 All of these components were designed to be used within Kubernetes. Their Helm
 charts were placed into [architecture](architecture) folder.
@@ -98,3 +101,8 @@ It should be noted that there are no validation of identical songs.
 }
 ```
 * description: Try to recognize track
+---
+
+And finally, it looks like this :D
+
+![](extension-design.png)
