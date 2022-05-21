@@ -5,7 +5,7 @@ from helpers.get_target_zones_with_anchors import get_target_zones_with_anchors
 from helpers.get_windowed_fft_result import get_windowed_fft_result
 
 
-def perform_algorithm(sound, frame_rate, window_size=4096):
+def perform_algorithm(sound, frame_rate, window_size=1024):
     bins, y_freq = get_windowed_fft_result(sound, frame_rate, window_size)
     most_powerful_bin_indices = compute_most_powerful_bin_indices(y_freq)
     transformed = get_flatten_bin_indices(most_powerful_bin_indices)

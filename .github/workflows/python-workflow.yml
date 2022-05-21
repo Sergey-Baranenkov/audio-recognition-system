@@ -1,0 +1,15 @@
+name: Python worker CI
+
+on:
+  push:
+    paths:
+      - python-worker/**
+
+jobs:
+  docker_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: test
+        run: docker ps -a
