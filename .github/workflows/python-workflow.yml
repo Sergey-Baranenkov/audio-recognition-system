@@ -6,7 +6,22 @@ on:
       - python-worker/**
 
 jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-worker
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: intall deps
+        run: pip install --disable-pip-version-check --no-cache-dir -r requirements.txt
+
+      - name: run tests
+        run: python -m unittests -v
+
   docker_build:
+    needs: unit_tests
     runs-on: ubuntu-latest
     defaults:
       run:
