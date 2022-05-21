@@ -18,7 +18,7 @@ jobs:
         run: pip install --disable-pip-version-check --no-cache-dir -r requirements.txt
 
       - name: run tests
-        run: python -m unittest -v
+        run: python tests.py -v
 
   docker_build:
     needs: unit_tests
