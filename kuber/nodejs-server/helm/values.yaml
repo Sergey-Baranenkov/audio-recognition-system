@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: araxal/diploma-nodejs-server
   pullPolicy: IfNotPresent
-  tag: "v1.0.0"
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""

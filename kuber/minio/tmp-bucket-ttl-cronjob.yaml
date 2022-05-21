@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "diploma-minio-tmp-bucket-ttl-cronjob"
+spec:
+  schedule: "*/30 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: "diploma-minio-tmp-bucket-ttl-job"
+              image: minio/mc
+              command: ["bin/sh", "-c"]
+              args:
+                - |  
+                  mc config host rm local;
+                  until (mc config host add local http://diploma-minio:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY) do echo 'waiting for minio server to come online...' && sleep 1; done;
+                  if mc ls local | grep temporary; then \
+                    mc find local/temporary --older-than 30m --exec "mc rm {}"
+                  else
+                    echo "Bucket temporary not found"
+                  fi;
+              envFrom:
+                - secretRef:
+                    name: diploma-minio-cronjob-env
+
+          restartPolicy: Never
+
+

@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: araxal/diploma-python-worker
   pullPolicy: IfNotPresent
-  tag: "v1.1.2"
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""
