@@ -13,6 +13,8 @@ jobs:
         working-directory: python-worker
     steps:
       - uses: actions/checkout@v2
+      - name: install libs
+        run: apt-get update && apt-get install -yq ffmpeg
 
       - name: intall deps
         run: pip install --disable-pip-version-check --no-cache-dir -r requirements.txt
