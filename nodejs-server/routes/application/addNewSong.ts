@@ -42,7 +42,7 @@ async function addNewSong({ file, title, author, genres }: JoiExtractTypes<typeo
         title,
         author,
         genres,
-        src: `http://${config.MINIO_ENDPOINT}/${config.MINIO_MUSIC_BUCKET}/${key}`,
+        src: `http://${config.MINIO_PUBLIC_URL}/${config.MINIO_MUSIC_BUCKET}/${key}`,
     }
 
     await collection.insertOne(metadata);

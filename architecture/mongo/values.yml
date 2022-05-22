@@ -5,6 +5,6 @@ shards: 1
 mongos:
   ## @param mongos.replicas Number of replicas
   ##
-  replicas: 1
+  replicas: 2
   # мб включить для курсоров
   useStatefulSet: false
