@@ -9,9 +9,9 @@ export default async function parseMP3Metadata(path){
 
 const musicFolder = '/home/araxal/harddrive/fma_small';
 
-const cutMusicFolder = '/home/araxal/harddrive/fma_small_cut';
+const cutMusicFolder = '/home/araxal/harddrive/fma_small_cut_noise';
 
-const timeInterval = '5s';
+const timeInterval = '7s';
 
 const genresToTest = 5;
 let counter = 0;

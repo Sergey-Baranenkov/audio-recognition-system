@@ -1,0 +1,1 @@
+This module is intended to merge two files in order to create music with noise.

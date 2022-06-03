@@ -108,3 +108,16 @@ It should be noted that there are no validation of identical songs.
 And finally, it looks like this :D
 
 ![](extension-design.png)
+
+Testing results:
+
+a) Samples without noise:
+  - 10s 95% correct, <1% incorrect, <5% unrecognized
+  - 7s 87%, 1% incorrect, 12% unrecognized
+  - 5s 82%, 1% incorrect, 17% unrecognized
+
+b) Samples with noise:
+  - 10s not tested
+  - 7s 70% correct, <1% incorrect, 30% unrecognized
+  - 5s 69% correct, <1% incorrect, 31% unrecognized
+

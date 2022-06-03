@@ -1,0 +1,1 @@
+This folder is intended to deploy an application into kubernetes cluster

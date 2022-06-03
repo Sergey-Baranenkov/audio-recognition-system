@@ -1,0 +1,1 @@
+This module is the microservice that performs Wang fingerprinting algorithm
